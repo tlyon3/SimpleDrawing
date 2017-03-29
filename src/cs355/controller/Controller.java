@@ -235,39 +235,30 @@ public class Controller implements CS355Controller {
             try {
                 switch (iterator.next()) {
                     case (int) 'W':
-                        // TODO: 3/27/17 Move forward
                         view.moveForward();
                         break;
                     case (int) 'A':
-                        // TODO: 3/27/17 Move left
                         view.moveLeft();
                         break;
                     case (int) 'S':
-                        // TODO: 3/27/17 Move right
                         view.moveBack();
                         break;
                     case (int) 'D':
-                        // TODO: 3/27/17 Move back
                         view.moveRight();
                         break;
                     case (int) 'Q':
-                        // TODO: 3/27/17 Turn left
                         view.turnLeft();
                         break;
                     case (int) 'E':
-                        // TODO: 3/27/17 Turn right
                         view.turnRight();
                         break;
                     case (int) 'R':
-                        // TODO: 3/27/17 Move up
                         view.moveUp();
                         break;
                     case (int) 'F':
-                        // TODO: 3/27/17 Move down
                         view.moveDown();
                         break;
                     case (int) 'H':
-                        // TODO: 3/27/17 Reset position
                         view.resetCamera();
                         break;
                 }

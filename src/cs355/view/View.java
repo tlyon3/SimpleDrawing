@@ -102,7 +102,6 @@ public class View implements ViewRefresher {
         this.scale /= 2;
 
         GUIFunctions.setZoomText(scale);
-        // TODO: 2/22/17 Set position
         double newSize = size / scale;
         Point2D.Double prevCenter = new Point2D.Double(position.x + prevSize / 2, position.y + prevSize / 2);
         Point2D.Double newTopLeft = new Point2D.Double(prevCenter.x - newSize / 2, prevCenter.y - newSize / 2);
@@ -138,14 +137,13 @@ public class View implements ViewRefresher {
         GUIFunctions.refresh();
     }
 
-    // TODO: 3/27/17 This should be called by the controller whenever the camera moves/rotates
     public void update3DMatrices() {
         //Update world-to-camera matrix
         CR = new DoubleMatrix(new double[][]
                 {
-                        {Math.cos(Math.toRadians(cameraAngle)), 0, Math.sin(Math.toRadians(cameraAngle)), 0},
+                        {Math.cos(Math.toRadians(cameraAngle)), 0, -Math.sin(Math.toRadians(cameraAngle)), 0},
                         {0, 1, 0, 0},
-                        {-Math.sin(Math.toRadians(cameraAngle)), 0, Math.cos(Math.toRadians(cameraAngle)), 0},
+                        {Math.sin(Math.toRadians(cameraAngle)), 0, Math.cos(Math.toRadians(cameraAngle)), 0},
                         {0, 0, 0, 1}
                 });
         CT = new DoubleMatrix(new double[][]
@@ -155,7 +153,6 @@ public class View implements ViewRefresher {
                         {0, 0, 1, -cameraPosition.z},
                         {0, 0, 0, 1}
                 });
-        // TODO: 3/27/17 Check ordering of matrices, might need to be reversed
         WC = CR.mmul(CT);
 
         //Update clip matrix
@@ -178,23 +175,23 @@ public class View implements ViewRefresher {
     }
 
     public void moveForward() {
-        cameraPosition.x -= Math.sin(Math.toRadians(cameraAngle));
+        cameraPosition.x += Math.sin(Math.toRadians(cameraAngle));
         cameraPosition.z += Math.cos(Math.toRadians(cameraAngle));
     }
 
     public void moveLeft() {
         cameraPosition.x += Math.sin(Math.toRadians(cameraAngle - 90));
-        cameraPosition.z -= Math.cos(Math.toRadians(cameraAngle - 90));
+        cameraPosition.z += Math.cos(Math.toRadians(cameraAngle - 90));
     }
 
     public void moveBack() {
-        cameraPosition.x += Math.sin(Math.toRadians(cameraAngle));
+        cameraPosition.x -= Math.sin(Math.toRadians(cameraAngle));
         cameraPosition.z -= Math.cos(Math.toRadians(cameraAngle));
     }
 
     public void moveRight() {
         cameraPosition.x -= Math.sin(Math.toRadians(cameraAngle - 90));
-        cameraPosition.z += Math.cos(Math.toRadians(cameraAngle - 90));
+        cameraPosition.z -= Math.cos(Math.toRadians(cameraAngle - 90));
     }
 
     public void moveUp() {
@@ -206,16 +203,17 @@ public class View implements ViewRefresher {
     }
 
     public void turnRight() {
-        cameraAngle -= 1.5;
-        if (cameraAngle <= 0) {
-            cameraAngle = 360;
+        cameraAngle += 1.5;
+
+        if (cameraAngle >= 360) {
+            cameraAngle = 0;
         }
     }
 
     public void turnLeft() {
-        cameraAngle += 1.5;
-        if (cameraAngle >= 360) {
-            cameraAngle = 0;
+        cameraAngle -= 1.5;
+        if (cameraAngle <= 0) {
+            cameraAngle = 360;
         }
     }
 
@@ -394,7 +392,6 @@ public class View implements ViewRefresher {
             drawBoundingShape(shape, g2d);
         }
 
-        // TODO: 3/26/17 Render 3D graphics
         if (render3D && model.getScene() != null) {
             CS355Scene scene = model.getScene();
             //Handle each Instance in scene
@@ -402,9 +399,9 @@ public class View implements ViewRefresher {
                 //Create object-to-world matrix
                 DoubleMatrix OR = new DoubleMatrix(new double[][]
                         {
-                                {Math.cos(inst.getRotAngle()), 0, Math.sin(inst.getRotAngle()), 0},
+                                {Math.cos(Math.toRadians(inst.getRotAngle() - 180)), 0, -Math.sin(Math.toRadians(inst.getRotAngle() - 180)), 0},
                                 {0, 1, 0, 0},
-                                {-Math.sin(inst.getRotAngle()), 0, Math.cos(inst.getRotAngle()), 0},
+                                {Math.sin(Math.toRadians(inst.getRotAngle() - 180)), 0, Math.cos(Math.toRadians(inst.getRotAngle() - 180)), 0},
                                 {0, 0, 0, 1}
                         });
                 DoubleMatrix OT = new DoubleMatrix(new double[][]
@@ -414,7 +411,6 @@ public class View implements ViewRefresher {
                                 {0, 0, 1, -inst.getPosition().z},
                                 {0, 0, 0, 1}
                         });
-                // TODO: 3/27/17 Check the ordering of the multiplies. Might need to be reversed
                 DoubleMatrix OW = OT.mmul(OR);
 
                 for (Line3D line : inst.getModel().getLines()) {
@@ -472,14 +468,13 @@ public class View implements ViewRefresher {
                     //Normalize 3D homogeneous coordinate (div by w)
                     DoubleMatrix normCoordA = clipCoordA.div(clipCoordA.get(3));
                     DoubleMatrix normCoordB = clipCoordB.div(clipCoordB.get(3));
-                    // TODO: 3/26/17 Apply viewport transformation
+                    //Apply viewport transformation
                     DoubleMatrix vpCoordA = VP.mmul(normCoordA);
                     DoubleMatrix vpCoordB = VP.mmul(normCoordB);
-                    //worldToView?
-                    // TODO: 3/26/17 Draw line to screen
+                    //Draw line to screen
                     //change color
                     g2d.setColor(inst.getColor());
-                    // TODO: 3/26/17 Apply same viewing transformations used to implement 2D
+                    //Apply same viewing transformations used to implement 2D
                     g2d.setTransform(worldToView);
                     g2d.drawLine((int) vpCoordA.get(0), (int) vpCoordA.get(1), (int) vpCoordB.get(0), (int) vpCoordB.get(1));
                 }
