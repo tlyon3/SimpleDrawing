@@ -4,9 +4,6 @@ import cs355.GUIFunctions;
 import cs355.model.Model;
 import cs355.model.drawing.*;
 import cs355.model.drawing.Rectangle;
-import cs355.model.drawing.Shape;
-import cs355.model.scene.CS355Scene;
-import cs355.solution.CS355;
 import cs355.view.View;
 
 import java.awt.*;
@@ -223,27 +220,63 @@ public class Controller implements CS355Controller {
     @Override
     public void openScene(File file) {
         model.openScene(file);
+        GUIFunctions.refresh();
     }
 
     @Override
     public void toggle3DModelDisplay() {
         view.toggle3D();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void keyPressed(Iterator<Integer> iterator) {
-        if(view.isRender3D()){
-            return;
-        }
-        switch (iterator.next()){
-            case (int)'W':
-                break;
-            case (int)'A':
-                break;
-            case (int)'S':
-                break;
-            case (int)'D':
-                break;
+        if(view.isRender3D()) {
+            try {
+                switch (iterator.next()) {
+                    case (int) 'W':
+                        // TODO: 3/27/17 Move forward
+                        view.moveForward();
+                        break;
+                    case (int) 'A':
+                        // TODO: 3/27/17 Move left
+                        view.moveLeft();
+                        break;
+                    case (int) 'S':
+                        // TODO: 3/27/17 Move right
+                        view.moveBack();
+                        break;
+                    case (int) 'D':
+                        // TODO: 3/27/17 Move back
+                        view.moveRight();
+                        break;
+                    case (int) 'Q':
+                        // TODO: 3/27/17 Turn left
+                        view.turnLeft();
+                        break;
+                    case (int) 'E':
+                        // TODO: 3/27/17 Turn right
+                        view.turnRight();
+                        break;
+                    case (int) 'R':
+                        // TODO: 3/27/17 Move up
+                        view.moveUp();
+                        break;
+                    case (int) 'F':
+                        // TODO: 3/27/17 Move down
+                        view.moveDown();
+                        break;
+                    case (int) 'H':
+                        // TODO: 3/27/17 Reset position
+                        view.resetCamera();
+                        break;
+                }
+            }
+            catch (NoSuchElementException ex){
+                System.err.println("Error in iterator.next()");
+            }
+            view.update3DMatrices();
+            GUIFunctions.refresh();
         }
     }
 
@@ -543,13 +576,6 @@ public class Controller implements CS355Controller {
             default:
                 break;
         }
-        GUIFunctions.refresh();
-    }
-
-    private void setRotation(cs355.model.drawing.Shape s, double theta) {
-        int index = model.getShapes().indexOf(s);
-        model.getShape(index).setRotation(theta);
-        setUpHandles();
         GUIFunctions.refresh();
     }
 

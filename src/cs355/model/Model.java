@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Created by tlyon on 1/21/17.
@@ -72,10 +71,6 @@ public class Model extends Observable {
         return newShape;
     }
 
-    public Shape getShape(int index) {
-        return shapes.get(index);
-    }
-
     public void deleteShape(int index) {
         shapes.remove(index);
         setChanged();
@@ -120,12 +115,6 @@ public class Model extends Observable {
 
     public ArrayList<Shape> getShapes() {
         return shapes;
-    }
-
-    public ArrayList<Shape> getShapesReversed() {
-        Stack<Shape> temp = new Stack<>();
-        this.shapes.forEach(temp::push);
-        return temp.stream().map(ignored -> temp.pop()).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private void setShapes(List<Shape> shapes) {

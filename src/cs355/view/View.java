@@ -1,6 +1,5 @@
 package cs355.view;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import cs355.GUIFunctions;
 import cs355.model.Model;
 import cs355.model.drawing.*;
@@ -10,7 +9,6 @@ import cs355.model.scene.CS355Scene;
 import cs355.model.scene.Instance;
 import cs355.model.scene.Line3D;
 import cs355.model.scene.Point3D;
-import cs355.solution.CS355;
 import org.jblas.DoubleMatrix;
 
 import java.awt.*;
@@ -35,7 +33,21 @@ public class View implements ViewRefresher {
     private boolean drawingHandles = false;
     private boolean render3D = false;
     private Point3D cameraPosition;
-    private double cameraAngle = 0.0;
+    private double cameraAngle = 0;
+    private final double fov = 50;
+    private final double nearPlane = 2;
+    private final double farPlane = 300;
+    private DoubleMatrix CR;
+    private DoubleMatrix CT;
+    private DoubleMatrix C;
+    private DoubleMatrix WC;
+    private DoubleMatrix VP = new DoubleMatrix(new double[][]
+            {
+                    {2048 / 2, 0, 2048 / 2, 0},
+                    {0, -2048 / 2, 2048 / 2, 0},
+                    {0, 0, 1, 0},
+                    {0, 0, 0, 1}
+            });
 
     /*
     * CONSTRUCTORS
@@ -46,7 +58,8 @@ public class View implements ViewRefresher {
         this.scale = 1.0;
         this.position = new Point2D.Double(0, 0);
         updateTransformations();
-        cameraPosition = new Point3D(0, -2, -25);
+        cameraPosition = new Point3D(0, 8, -100);
+        update3DMatrices();
     }
 
     /*
@@ -126,9 +139,94 @@ public class View implements ViewRefresher {
     }
 
     // TODO: 3/27/17 This should be called by the controller whenever the camera moves/rotates
-    public void update3DMatrices(){
+    public void update3DMatrices() {
+        //Update world-to-camera matrix
+        CR = new DoubleMatrix(new double[][]
+                {
+                        {Math.cos(Math.toRadians(cameraAngle)), 0, Math.sin(Math.toRadians(cameraAngle)), 0},
+                        {0, 1, 0, 0},
+                        {-Math.sin(Math.toRadians(cameraAngle)), 0, Math.cos(Math.toRadians(cameraAngle)), 0},
+                        {0, 0, 0, 1}
+                });
+        CT = new DoubleMatrix(new double[][]
+                {
+                        {1, 0, 0, -cameraPosition.x},
+                        {0, 1, 0, -cameraPosition.y},
+                        {0, 0, 1, -cameraPosition.z},
+                        {0, 0, 0, 1}
+                });
+        // TODO: 3/27/17 Check ordering of matrices, might need to be reversed
+        WC = CR.mmul(CT);
 
+        //Update clip matrix
+        double radians = Math.toRadians(fov);
+        double zoom = 1 / Math.tan(radians / 2);
+        C = new DoubleMatrix(new double[][]
+                {
+                        //do I use the zoom or the scale here???
+                        {zoom, 0, 0, 0},
+                        {0, zoom, 0, 0},
+                        {0, 0, (farPlane + nearPlane) / (farPlane - nearPlane), (-2 * nearPlane * farPlane) / (farPlane - nearPlane)},
+                        {0, 0, 1, 0}
+                });
     }
+
+    public boolean toggle3D() {
+        render3D = !render3D;
+        update3DMatrices();
+        return render3D;
+    }
+
+    public void moveForward() {
+        cameraPosition.x -= Math.sin(Math.toRadians(cameraAngle));
+        cameraPosition.z += Math.cos(Math.toRadians(cameraAngle));
+    }
+
+    public void moveLeft() {
+        cameraPosition.x += Math.sin(Math.toRadians(cameraAngle - 90));
+        cameraPosition.z -= Math.cos(Math.toRadians(cameraAngle - 90));
+    }
+
+    public void moveBack() {
+        cameraPosition.x += Math.sin(Math.toRadians(cameraAngle));
+        cameraPosition.z -= Math.cos(Math.toRadians(cameraAngle));
+    }
+
+    public void moveRight() {
+        cameraPosition.x -= Math.sin(Math.toRadians(cameraAngle - 90));
+        cameraPosition.z += Math.cos(Math.toRadians(cameraAngle - 90));
+    }
+
+    public void moveUp() {
+        cameraPosition.y += 1.0;
+    }
+
+    public void moveDown() {
+        cameraPosition.y -= 1.0;
+    }
+
+    public void turnRight() {
+        cameraAngle -= 1.5;
+        if (cameraAngle <= 0) {
+            cameraAngle = 360;
+        }
+    }
+
+    public void turnLeft() {
+        cameraAngle += 1.5;
+        if (cameraAngle >= 360) {
+            cameraAngle = 0;
+        }
+    }
+
+    public void resetCamera() {
+        cameraAngle = 0;
+        cameraPosition.y = 8;
+        cameraPosition.x = 0;
+        cameraPosition.z = -100;
+        update3DMatrices();
+    }
+
     /*
     * PRIVATE METHODS
     */
@@ -297,35 +395,17 @@ public class View implements ViewRefresher {
         }
 
         // TODO: 3/26/17 Render 3D graphics
-        if (render3D) {
-            // TODO: 3/27/17 Move this so we aren't creating it every time we refresh
-            // TODO: 3/27/17 Update this when we move/rotate the camera
-            //Create world-to-camera matrix
-            DoubleMatrix CR = new DoubleMatrix(new double[][]
-                    {
-                            {Math.cos(cameraAngle), 0, Math.sin(cameraAngle)},
-                            {0, 1, 0},
-                            {-Math.sin(cameraAngle), 0, Math.cos(cameraAngle)}
-                    });
-            DoubleMatrix CT = new DoubleMatrix(new double[][]
-                    {
-                            {1, 0, 0, -cameraPosition.x},
-                            {0, 1, 0, -cameraPosition.y},
-                            {0, 0, 1, -cameraPosition.z},
-                            {0, 0, 0, 1}
-                    });
-            // TODO: 3/27/17 Check ordering of matrices, might need to be reversed
-            DoubleMatrix WC = CR.mmul(CT);
-
+        if (render3D && model.getScene() != null) {
             CS355Scene scene = model.getScene();
             //Handle each Instance in scene
             for (Instance inst : scene.instances()) {
                 //Create object-to-world matrix
                 DoubleMatrix OR = new DoubleMatrix(new double[][]
                         {
-                                {Math.cos(inst.getRotAngle()), 0, Math.sin(inst.getRotAngle())},
-                                {0, 1, 0},
-                                {-Math.sin(inst.getRotAngle()), 0, Math.cos(inst.getRotAngle())}
+                                {Math.cos(inst.getRotAngle()), 0, Math.sin(inst.getRotAngle()), 0},
+                                {0, 1, 0, 0},
+                                {-Math.sin(inst.getRotAngle()), 0, Math.cos(inst.getRotAngle()), 0},
+                                {0, 0, 0, 1}
                         });
                 DoubleMatrix OT = new DoubleMatrix(new double[][]
                         {
@@ -335,33 +415,73 @@ public class View implements ViewRefresher {
                                 {0, 0, 0, 1}
                         });
                 // TODO: 3/27/17 Check the ordering of the multiplies. Might need to be reversed
-                DoubleMatrix OW = OR.mmul(OT);
+                DoubleMatrix OW = OT.mmul(OR);
 
                 for (Line3D line : inst.getModel().getLines()) {
                     //Convert to (X,Y,Z,1) homogeneous coordinate
                     Point3D a = line.start;
                     Point3D b = line.end;
                     DoubleMatrix A = new DoubleMatrix(new double[]{a.x, a.y, a.z, 1});
-                    DoubleMatrix B = new DoubleMatrix(new double[]{b.z, b.y, b.z, 1});
+                    DoubleMatrix B = new DoubleMatrix(new double[]{b.x, b.y, b.z, 1});
                     //Apply object-to-world matrix
                     DoubleMatrix worldCoordinatesA = OW.mmul(A);
                     DoubleMatrix worldCoordinatesB = OW.mmul(B);
+//                    DoubleMatrix wcaot = OR.mmul(A);
+//                    DoubleMatrix wcbot = OR.mmul(B);
+//                    DoubleMatrix worldCoordinatesA = OT.mmul(wcaot);
+//                    DoubleMatrix worldCoordinatesB = OT.mmul(wcbot);
 
                     //Apply to world-to-camera matrix
                     DoubleMatrix cameraCoordA = WC.mmul(worldCoordinatesA);
                     DoubleMatrix cameraCoordB = WC.mmul(worldCoordinatesB);
+//                    DoubleMatrix ccact = CT.mmul(worldCoordinatesA);
+//                    DoubleMatrix ccbct = CT.mmul(worldCoordinatesB);
+//                    DoubleMatrix cameraCoordA = CR.mmul(ccact);
+//                    DoubleMatrix cameraCoordB = CR.mmul(ccbct);
 
-                    // TODO: 3/26/17 Create clip matrix
+                    //Apply clip matrix
+                    DoubleMatrix clipCoordA = C.mmul(cameraCoordA);
+                    DoubleMatrix clipCoordB = C.mmul(cameraCoordB);
 
-                    // TODO: 3/26/17 Apply clip matrix
-                    // TODO: 3/26/17 Apply clipping tests.
-                    // Reject if both points fail the same view frustum test
+                    //Apply clipping tests.
+                    // Reject if either point fails the near-plane test
+                    if (clipCoordA.get(2) < -clipCoordA.get(3) || clipCoordA.get(2) > clipCoordA.get(3)) {
+                        continue;
+                    }
+                    if (clipCoordB.get(2) < -clipCoordA.get(3) || clipCoordB.get(2) > clipCoordB.get(3)) {
+                        continue;
+                    }
                     // OR
-                    // if either point fails the near-plane test
-                    // TODO: 3/26/17 Normalize 3D homogeneous coordinate (div by w)
+                    // if both points fail the same view frustum test
+                    //left
+                    if (clipCoordA.get(0) < -clipCoordA.get(3) && clipCoordB.get(0) < clipCoordB.get(3)) {
+                        continue;
+                    }
+                    //right
+                    if (clipCoordA.get(0) > clipCoordA.get(3) && clipCoordB.get(0) > clipCoordB.get(3)) {
+                        continue;
+                    }
+                    //bottom
+                    if (clipCoordA.get(1) < -clipCoordA.get(3) && clipCoordB.get(1) < -clipCoordB.get(3)) {
+                        continue;
+                    }
+                    //top
+                    if (clipCoordA.get(1) > clipCoordA.get(3) && clipCoordB.get(1) > clipCoordB.get(3)) {
+                        continue;
+                    }
+                    //Normalize 3D homogeneous coordinate (div by w)
+                    DoubleMatrix normCoordA = clipCoordA.div(clipCoordA.get(3));
+                    DoubleMatrix normCoordB = clipCoordB.div(clipCoordB.get(3));
                     // TODO: 3/26/17 Apply viewport transformation
-                    // TODO: 3/26/17 Apply same viewing transformations used to implement 2D
+                    DoubleMatrix vpCoordA = VP.mmul(normCoordA);
+                    DoubleMatrix vpCoordB = VP.mmul(normCoordB);
+                    //worldToView?
                     // TODO: 3/26/17 Draw line to screen
+                    //change color
+                    g2d.setColor(inst.getColor());
+                    // TODO: 3/26/17 Apply same viewing transformations used to implement 2D
+                    g2d.setTransform(worldToView);
+                    g2d.drawLine((int) vpCoordA.get(0), (int) vpCoordA.get(1), (int) vpCoordB.get(0), (int) vpCoordB.get(1));
                 }
             }
         }
@@ -380,11 +500,6 @@ public class View implements ViewRefresher {
 
     public double getScale() {
         return scale;
-    }
-
-    public boolean toggle3D() {
-        render3D = !render3D;
-        return render3D;
     }
 
     public boolean isRender3D() {
