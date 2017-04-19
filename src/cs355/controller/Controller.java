@@ -273,6 +273,7 @@ public class Controller implements CS355Controller {
 
     @Override
     public void openImage(File file) {
+        System.out.print("Opening image\n");
         model.openImage(file);
         GUIFunctions.refresh();
     }

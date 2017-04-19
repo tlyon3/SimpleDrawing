@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.awt.image.WritableRaster;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -185,11 +186,139 @@ public class Image extends CS355Image {
     @Override
     public void medianBlur() {
         // TODO: 4/18/17 do it
+        int[] rgb = new int[3];
+        int[] xIndex = new int[9];
+        int[] yIndex = new int[9];
+
+        Image bufferImage = new Image();
+        bufferImage.setPixels(getImage());
+
+        for (int i = 0; i < getWidth(); i++) {
+            for (int j = 0; j < getHeight(); j++) {
+                //get neighbor indexes. account for edges
+                int prevX = i - 1;
+                if (prevX < 0) prevX = 0;
+                int prevY = j - 1;
+                if (prevY < 0) prevY = 0;
+                int nextX = i + 1;
+                int nextY = j + 1;
+                if (nextX > super.getWidth() - 1) nextX = i;
+                if (nextY > super.getHeight() - 1) nextY = j;
+
+                //set x indexes
+                xIndex[0] = prevX;
+                xIndex[1] = i;
+                xIndex[2] = nextX;
+                xIndex[3] = prevX;
+                xIndex[4] = i;
+                xIndex[5] = nextX;
+                xIndex[6] = prevX;
+                xIndex[7] = i;
+                xIndex[8] = nextX;
+
+                //set y indexes
+                yIndex[0] = prevY;
+                yIndex[1] = prevY;
+                yIndex[2] = prevY;
+                yIndex[3] = j;
+                yIndex[4] = j;
+                yIndex[5] = j;
+                yIndex[6] = nextY;
+                yIndex[7] = nextY;
+                yIndex[8] = nextY;
+
+                int[] rPixels = new int[9];
+                int[] gPixels = new int[9];
+                int[] bPixels = new int[9];
+                //apply kernel(s)
+                for (int k = 0; k < 9; k++) {
+                    rgb = getPixel(xIndex[k], yIndex[k], rgb);
+                    rPixels[k] = rgb[0];
+                    gPixels[k] = rgb[1];
+                    bPixels[k] = rgb[2];
+                }
+                Arrays.sort(rPixels);
+                Arrays.sort(gPixels);
+                Arrays.sort(bPixels);
+
+                rgb[0] = rPixels[4];
+                rgb[1] = gPixels[4];
+                rgb[2] = bPixels[4];
+                bufferImage.setPixel(i, j, rgb);
+            }
+        }
+        this.setPixels(bufferImage.getImage());
+        this.bufferedImage = null;
     }
 
     @Override
     public void uniformBlur() {
         // TODO: 4/18/17 do it
+        int[] rgb = new int[3];
+        int[] xIndex = new int[9];
+        int[] yIndex = new int[9];
+
+        Image bufferImage = new Image();
+        bufferImage.setPixels(getImage());
+
+        for (int i = 0; i < getWidth(); i++) {
+            for (int j = 0; j < getHeight(); j++) {
+                //get neighbor indexes. account for edges
+                int prevX = i - 1;
+                if (prevX < 0) prevX = 0;
+                int prevY = j - 1;
+                if (prevY < 0) prevY = 0;
+                int nextX = i + 1;
+                int nextY = j + 1;
+                if (nextX > super.getWidth() - 1) nextX = i;
+                if (nextY > super.getHeight() - 1) nextY = j;
+
+                //set x indexes
+                xIndex[0] = prevX;
+                xIndex[1] = i;
+                xIndex[2] = nextX;
+                xIndex[3] = prevX;
+                xIndex[4] = i;
+                xIndex[5] = nextX;
+                xIndex[6] = prevX;
+                xIndex[7] = i;
+                xIndex[8] = nextX;
+
+                //set y indexes
+                yIndex[0] = prevY;
+                yIndex[1] = prevY;
+                yIndex[2] = prevY;
+                yIndex[3] = j;
+                yIndex[4] = j;
+                yIndex[5] = j;
+                yIndex[6] = nextY;
+                yIndex[7] = nextY;
+                yIndex[8] = nextY;
+
+                double sumR = 0;
+                double sumG = 0;
+                double sumB = 0;
+                //apply kernel(s)
+                for (int k = 0; k < 9; k++) {
+                    rgb = getPixel(xIndex[k], yIndex[k], rgb);
+                    sumR += rgb[0];
+                    sumG += rgb[1];
+                    sumB += rgb[2];
+                }
+                sumR /= 9;
+                sumB /= 9;
+                sumG /= 9;
+                sumR = Math.max(Math.min(sumR, 255), 0);
+                sumG = Math.max(Math.min(sumG, 255), 0);
+                sumB = Math.max(Math.min(sumB, 255), 0);
+                rgb[0] = (int) sumR;
+                rgb[1] = (int) sumG;
+                rgb[2] = (int) sumB;
+                bufferImage.setPixel(i, j, rgb);
+            }
+        }
+        this.setPixels(bufferImage.getImage());
+        this.bufferedImage = null;
     }
 
     @Override
@@ -265,7 +394,4 @@ public class Image extends CS355Image {
         bufferedImage = null;
     }
 
-    void applyKernel(float[][] kernel) {
-
-    }
 }
