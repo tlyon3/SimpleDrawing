@@ -273,24 +273,13 @@ public class Controller implements CS355Controller {
 
     @Override
     public void openImage(File file) {
-        if (model.open(file)) {
-            System.out.println("Opened file: " + file.toString());
-            // TODO: 1/21/17 Display success message
-        } else {
-            System.out.println("Error opening file: " + file.toString());
-            // TODO: 1/21/17 Display error message
-        }
+        model.openImage(file);
+        GUIFunctions.refresh();
     }
 
     @Override
     public void saveImage(File file) {
-        if (model.save(file)) {
-            System.out.println("Saved file: " + file.toString());
-            // TODO: 1/21/17 Display success message
-        } else {
-            System.out.println("Error saving file: " + file.toString());
-            // TODO: 1/21/17 Display error message
-        }
+        model.saveImage(file);
     }
 
     @Override
@@ -322,37 +311,44 @@ public class Controller implements CS355Controller {
 
     @Override
     public void doEdgeDetection() {
-
+        model.getImage().edgeDetection();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doSharpen() {
-
+        model.getImage().sharpen();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doMedianBlur() {
-
+        model.getImage().medianBlur();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doUniformBlur() {
-
+        model.getImage().uniformBlur();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doGrayscale() {
-
+        model.getImage().grayscale();
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doChangeContrast(int contrastAmountNum) {
-
+        model.getImage().contrast(contrastAmountNum);
+        GUIFunctions.refresh();
     }
 
     @Override
     public void doChangeBrightness(int brightnessAmountNum) {
-
+        model.getImage().brightness(brightnessAmountNum);
+        GUIFunctions.refresh();
     }
 
     @Override

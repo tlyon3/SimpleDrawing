@@ -7,6 +7,7 @@ import cs355.GUIFunctions;
 import cs355.JsonShape;
 import cs355.model.drawing.Circle;
 import cs355.model.drawing.Shape;
+import cs355.model.image.Image;
 import cs355.model.scene.CS355Scene;
 
 import java.io.File;
@@ -36,6 +37,8 @@ public class Model extends Observable {
     private Circle handle1;
     private Circle handle2;
     private CS355Scene scene;
+    private Image image;
+    private Image originalImage;
 
     public static Model getInstance() {
         if (instance == null) {
@@ -214,5 +217,20 @@ public class Model extends Observable {
 
     public CS355Scene getScene() {
         return scene;
+    }
+
+    public Image getImage(){
+        return this.image;
+    }
+
+    public void openImage(File f){
+        this.image = new Image();
+        this.originalImage = new Image();
+        this.image.open(f);
+        this.originalImage.open(f);
+    }
+
+    public void saveImage(File f){
+        this.image.save(f);
     }
 }

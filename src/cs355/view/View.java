@@ -14,6 +14,8 @@ import org.jblas.DoubleMatrix;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.Observable;
 
@@ -37,14 +39,16 @@ public class View implements ViewRefresher {
     private final double fov = 50;
     private final double nearPlane = 2;
     private final double farPlane = 300;
+    private final double height = 2048;
+    private final double width = 2048;
     private DoubleMatrix CR;
     private DoubleMatrix CT;
     private DoubleMatrix C;
     private DoubleMatrix WC;
     private DoubleMatrix VP = new DoubleMatrix(new double[][]
             {
-                    {2048 / 2, 0, 2048 / 2, 0},
-                    {0, -2048 / 2, 2048 / 2, 0},
+                    {width / 2, 0, height / 2, 0},
+                    {0, -height / 2, width / 2, 0},
                     {0, 0, 1, 0},
                     {0, 0, 0, 1}
             });
@@ -375,6 +379,11 @@ public class View implements ViewRefresher {
 
     @Override
     public void refreshView(Graphics2D g2d) {
+        if (model.getImage() != null) {
+            g2d.setTransform(worldToView);
+            BufferedImage bufferedImage = model.getImage().getImage();
+            g2d.drawImage(bufferedImage, null, (2048 - bufferedImage.getWidth()) / 2, (2048 - bufferedImage.getHeight()) / 2);
+        }
         ArrayList<cs355.model.drawing.Shape> shapes = model.getShapes();
         //reset transformation
         g2d.setTransform(new AffineTransform());
@@ -422,18 +431,10 @@ public class View implements ViewRefresher {
                     //Apply object-to-world matrix
                     DoubleMatrix worldCoordinatesA = OW.mmul(A);
                     DoubleMatrix worldCoordinatesB = OW.mmul(B);
-//                    DoubleMatrix wcaot = OR.mmul(A);
-//                    DoubleMatrix wcbot = OR.mmul(B);
-//                    DoubleMatrix worldCoordinatesA = OT.mmul(wcaot);
-//                    DoubleMatrix worldCoordinatesB = OT.mmul(wcbot);
 
                     //Apply to world-to-camera matrix
                     DoubleMatrix cameraCoordA = WC.mmul(worldCoordinatesA);
                     DoubleMatrix cameraCoordB = WC.mmul(worldCoordinatesB);
-//                    DoubleMatrix ccact = CT.mmul(worldCoordinatesA);
-//                    DoubleMatrix ccbct = CT.mmul(worldCoordinatesB);
-//                    DoubleMatrix cameraCoordA = CR.mmul(ccact);
-//                    DoubleMatrix cameraCoordB = CR.mmul(ccbct);
 
                     //Apply clip matrix
                     DoubleMatrix clipCoordA = C.mmul(cameraCoordA);
