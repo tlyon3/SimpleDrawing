@@ -284,7 +284,8 @@ public class Controller implements CS355Controller {
 
     @Override
     public void toggleBackgroundDisplay() {
-
+        System.out.println("Toggle bg display");
+        view.toggleDisplayImage();
     }
 
     @Override

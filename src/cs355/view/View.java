@@ -52,6 +52,10 @@ public class View implements ViewRefresher {
                     {0, 0, 1, 0},
                     {0, 0, 0, 1}
             });
+    boolean displayImage = false;
+    public void toggleDisplayImage() {
+        displayImage = !displayImage;
+    }
 
     /*
     * CONSTRUCTORS
@@ -379,7 +383,7 @@ public class View implements ViewRefresher {
 
     @Override
     public void refreshView(Graphics2D g2d) {
-        if (model.getImage() != null) {
+        if (model.getImage() != null && displayImage) {
             g2d.setTransform(worldToView);
             BufferedImage bufferedImage = model.getImage().getImage();
             g2d.drawImage(bufferedImage, null, (2048 - bufferedImage.getWidth()) / 2, (2048 - bufferedImage.getHeight()) / 2);
